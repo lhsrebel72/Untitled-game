@@ -2,9 +2,10 @@ import * as PIXI from 'pixi.js';
 
 export class Sprites {
 
-    constructor() {
+    constructor(stage) {
         this.grassTiles = [];
         this.forestTiles = [];
+        this.stage = stage;
     }
 
     // Load tiles
@@ -24,24 +25,37 @@ export class Sprites {
             renderedArea.height,
         );
         grassSprite.zIndex = -1;
-        return grassSprite;
+        this.stage.addChild(grassSprite);
     }
 
     // Create the forest sprites for the four sides of the square
     createForestSprites(playableAreaBounds) {
         this.loadTextureSet(this.forestTiles, "forest-tile", 2);
-        const northForest = new PIXI.TilingSprite(this.forestTiles[0], playableAreaBounds.maxX, 500);
-        const eastForest = new PIXI.TilingSprite(this.forestTiles[0], 500, playableAreaBounds.maxY);
-        const southForest = new PIXI.TilingSprite(this.forestTiles[0], playableAreaBounds.maxX, 500);
-        const westForest = new PIXI.TilingSprite(this.forestTiles[0], 500, playableAreaBounds.maxY);
-
-        // Set the positions of the sprites to form a square
-        northForest.position.set(playableAreaBounds.minX, playableAreaBounds.minY);
-        eastForest.position.set(playableAreaBounds.maxX, playableAreaBounds.minY);
-        southForest.position.set(playableAreaBounds.minX, playableAreaBounds.maxY);
-        westForest.position.set(playableAreaBounds.minX, playableAreaBounds.minY);
-
-        return [northForest, eastForest, southForest, westForest];
+    
+        const createTilingSprite = () => {
+            const northForest = new PIXI.TilingSprite(this.forestTiles[0], playableAreaBounds.maxX, this.forestTiles[0].height);
+            const eastForest = new PIXI.TilingSprite(this.forestTiles[0], this.forestTiles[0].height, playableAreaBounds.maxY);
+            const southForest = new PIXI.TilingSprite(this.forestTiles[0], playableAreaBounds.maxX, this.forestTiles[0].height);
+            const westForest = new PIXI.TilingSprite(this.forestTiles[0], this.forestTiles[0].height, playableAreaBounds.maxY);
+    
+            // Set the positions of the sprites to form a square
+            northForest.position.set(playableAreaBounds.minX, playableAreaBounds.minY);
+            eastForest.position.set(playableAreaBounds.maxX, playableAreaBounds.minY);
+            southForest.position.set(playableAreaBounds.minX, playableAreaBounds.maxY);
+            westForest.position.set(playableAreaBounds.minX, playableAreaBounds.minY);
+    
+            this.stage.addChild(northForest, eastForest, southForest, westForest);
+        };
+    
+        if (this.forestTiles[0].baseTexture.valid) {
+            // Texture has already been processed, create the TilingSprites
+            createTilingSprite();
+        } else {
+            // Wait for the texture to finish processing and then create the TilingSprites
+            this.forestTiles[0].baseTexture.once("loaded", () => {
+                createTilingSprite();
+            });
+        }
     }
 
     // Create the player sprite

@@ -1,3 +1,3 @@
 #!/bin/bash
 npx webpack
-surge . untitled-game.surge.js
+surge . untitled-game.surge.sh

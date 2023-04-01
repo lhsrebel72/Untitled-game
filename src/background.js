@@ -8,10 +8,7 @@ export class Background {
 
     // Set up the background
     setUp() {
-        const grassSprite = this.sprites.createGrassSprite(this.renderedArea);
-        const forestSprites = this.sprites.createForestSprites(this.playableAreaBounds);
-
-        // Add the sprites to the stage
-        this.stage.addChild(grassSprite, ...forestSprites);
+        this.sprites.createGrassSprite(this.renderedArea);
+        this.sprites.createForestSprites(this.playableAreaBounds);
     }
 }

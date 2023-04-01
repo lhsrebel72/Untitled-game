@@ -14,20 +14,20 @@ const app = new PIXI.Application({
 document.getElementById('game-container').appendChild(app.view);
 
 const renderedArea = {width: 5000, height:5000};
-const boundBuffer = 0;
+const boundBuffer = 500;
 const playableAreaBounds = {minX: 0 + boundBuffer, maxX: renderedArea.width - boundBuffer, minY:0 + boundBuffer, maxY:renderedArea.height - boundBuffer};
 
 // Create the game objects
-const sprites = new Sprites();
+const sprites = new Sprites(app.stage);
 const background = new Background(app.stage, renderedArea, playableAreaBounds, sprites);
 background.setUp();
 const input = new Input();
-const player = new Player(app.stage, playableAreaBounds);
+const player = new Player(app.stage, playableAreaBounds, sprites);
 
 // Set up the game loop
 function gameLoop(delta) {
-    input.update();
-    player.update(input.directions, playableAreaBounds);
+    //input.update();
+    player.update(input.directions, playableAreaBounds,app);
 }
 
 app.ticker.add(gameLoop);

@@ -3,8 +3,14 @@ import * as PIXI from 'pixi.js';
 export class Player {
     constructor(stage, playableAreaBounds, sprites) {
         this.sprites = sprites;
-        this.playerSprite = this.sprites.createPlayerSprite(playableAreaBounds);
+        this.playerTextureSet = []
+        this.playerSprite = this.sprites.createPlayerPlaceholderSprite(playableAreaBounds);
         stage.addChild(this.playerSprite);
+        const playerSpritePromise = this.sprites.createPlayerSpriteSet();
+        playerSpritePromise.then((playerTextureSet) => {
+            this.playerSprite.texture = playerTextureSet[0]
+            this.initiatePlayerTextureSet(playerTextureSet)
+        });
 
         this.directions = {
             up: false,
@@ -13,13 +19,15 @@ export class Player {
             right: false
         };
 
-        this.speed = 100;
+        this.speed = 10;
     }
 
     update(directions, playableAreaBounds, app) {
         // Use the directions object to move the player
-        this.movePlayer(directions,playableAreaBounds);
-        this.centerCameraOnPlayer(app);
+        if(this.playerSprite) {
+            this.movePlayer(directions,playableAreaBounds);
+            this.centerCameraOnPlayer(app);
+        }
     }
 
     movePlayer(directions, playableAreaBounds) {

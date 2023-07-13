@@ -26,7 +26,6 @@ const player = new Player(app.stage, playableAreaBounds, sprites);
 
 // Set up the game loop
 function gameLoop(delta) {
-    //input.update();
     player.update(input.directions, playableAreaBounds,app);
 }
 

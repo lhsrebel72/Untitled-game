@@ -35,11 +35,4 @@ export class Input {
             this.directions[direction] = value;
         }
     }
-
-    update() {
-        // Reset the directions object
-        for (const direction in this.directions) {
-            this.directions[direction] = false;
-        }
-    }
 }

@@ -141,4 +141,13 @@ export class Character {
         this.characterSprite.loop = false;                  // 6 fps
         this.characterSprite.play();
     }
+
+    getPosition(){
+        const x = this.characterSprite.x + this.characterSprite.width/2;
+        const y = this.characterSprite.y + this.characterSprite.height/2;
+        return{
+            x: x,
+            y: y
+        }
+    }
 }

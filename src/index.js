@@ -4,6 +4,7 @@ import { Enemy } from './enemy.js';
 import { Input } from './input.js';
 import { Sprites } from './sprites.js';
 import { Background } from './background.js';
+import { CombatManager } from './combatManager.js';
 
 // Set up Pixi.js
 const app = new PIXI.Application({
@@ -24,12 +25,16 @@ const background = new Background(app.stage, renderedArea, playableAreaBounds, s
 background.setUp();
 const input = new Input();
 const player = new Player(app.stage, playableAreaBounds, sprites);
-const enemy = new Enemy(app.stage, playableAreaBounds, sprites);
+const enemies = [new Enemy(app.stage, playableAreaBounds, sprites)];
+const combatManager = new CombatManager(app);
 
 // Set up the game loop
 function gameLoop(delta) {
     player.update(input.directions, playableAreaBounds, app);
-    enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y);
+    enemies.forEach(enemy => {
+        enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y);
+    })
+    if(player.currentDirection && input.isSpacebarPressed()) combatManager.playerSwing(player, enemies);
 }
 
 app.ticker.add(gameLoop);

@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 
 export class Enemy extends Character {
     constructor(stage, playableAreaBounds, sprites) {
-      super(stage, playableAreaBounds, sprites, playableAreaBounds.maxX/2 + 100, playableAreaBounds.maxY/2 + 100);
+      super(stage, playableAreaBounds, sprites, playableAreaBounds.maxX/2 - 100, playableAreaBounds.maxY/2);
 
       this.speed = 7;
 
@@ -16,7 +16,7 @@ export class Enemy extends Character {
     }
 
     update(playableAreaBounds, app, playerX, playerY) {
-        this.followPlayer(playerX, playerY);
+        //this.followPlayer(playerX, playerY);
         super.update(this.directionsToPlayer, playableAreaBounds, app);
     }
 
@@ -45,5 +45,9 @@ export class Enemy extends Character {
             this.directionsToPlayer.up = false
             this.directionsToPlayer.down = false
         }
+    }
+
+    destroy(){
+
     }
   }

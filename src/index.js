@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { Player } from './player.js';
+import { Enemy } from './enemy.js';
 import { Input } from './input.js';
 import { Sprites } from './sprites.js';
 import { Background } from './background.js';
@@ -23,10 +24,12 @@ const background = new Background(app.stage, renderedArea, playableAreaBounds, s
 background.setUp();
 const input = new Input();
 const player = new Player(app.stage, playableAreaBounds, sprites);
+const enemy = new Enemy(app.stage, playableAreaBounds, sprites);
 
 // Set up the game loop
 function gameLoop(delta) {
-    player.update(input.directions, playableAreaBounds,app);
+    player.update(input.directions, playableAreaBounds, app);
+    enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y);
 }
 
 app.ticker.add(gameLoop);

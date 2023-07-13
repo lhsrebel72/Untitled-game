@@ -5,8 +5,8 @@ export class Sprites {
     constructor(stage) {
         this.grassTextures = [];
         this.forestTextures = [];
-        this.playerTextureSets = [];
-        this.playerSpriteSheets = [];
+        this.characterTextureSets = [];
+        this.characterSpriteSheets = [];
         this.stage = stage;
     }
 
@@ -73,35 +73,35 @@ export class Sprites {
         }
     }
 
-    // Create the player sprite
-    createPlayerSpriteSet() {
+    // Create the character sprite
+    createCharacterSpriteSet() {
         return new Promise((resolve) => {
-            this.loadTextureSet(this.playerSpriteSheets, "player-sprite", 1);
+            this.loadTextureSet(this.characterSpriteSheets, "character-sprite", 1);
     
-            const createPlayerSprites = () => {
-                this.createSpriteTextureSetFromSheet(this.playerSpriteSheets[0], this.playerTextureSets, 64, 64);
-                resolve(this.playerTextureSets);
+            const createCharacterSprites = () => {
+                this.createSpriteTextureSetFromSheet(this.characterSpriteSheets[0], this.characterTextureSets, 64, 64);
+                resolve(this.characterTextureSets);
             };
         
-            if (this.playerSpriteSheets[0].baseTexture.valid) {
+            if (this.characterSpriteSheets[0].baseTexture.valid) {
                 // Texture has already been processed, create the TilingSprites
-                createPlayerSprite();
+                createCharacterSprite();
             } else {
                 // Wait for the texture to finish processing and then create the TilingSprites
-                this.playerSpriteSheets[0].baseTexture.once("loaded", () => {
-                    createPlayerSprites();
+                this.characterSpriteSheets[0].baseTexture.once("loaded", () => {
+                    createCharacterSprites();
                 });
             }
         });
     }
 
-    // Create placeholder sprite until player textures are loaded successfully
-    createPlayerPlaceholderSprite(playableAreaBounds) {
-        const player = new PIXI.AnimatedSprite([PIXI.Texture.WHITE, PIXI.Texture.RED]);
-        player.width = 100;
-        player.height = 100;
-        player.position.set(playableAreaBounds.maxX/2, playableAreaBounds.maxY/2);
-        player.zIndex = 100;
-        return player;
+    // Create placeholder sprite until character textures are loaded successfully
+    createCharacterPlaceholderSprite(playableAreaBounds, startingX, startingY) {
+        const character = new PIXI.AnimatedSprite([PIXI.Texture.WHITE, PIXI.Texture.RED]);
+        character.width = 100;
+        character.height = 100;
+        character.position.set(startingX, startingY);
+        character.zIndex = 100;
+        return character;
     }
 }

@@ -5,6 +5,7 @@ export class CombatManager {
 
     constructor(app) {
       this.app = app;
+      const swinging = false;
     }
 
     getDirectionAndDistance(spriteA, spriteB) {
@@ -91,10 +92,29 @@ export class CombatManager {
       return difference;
     }
 
-    getSwingPoints(centerX, centerY, radius, swingArc, numSteps) {
-      // Calculate the start and end angles
-      const startAngle = Math.PI / 2 - swingArc / 2;
-      const endAngle = Math.PI / 2 + swingArc / 2;
+    getSwingPoints(centerX, centerY, playerFacingAngle, radius, swingArc, numSteps) {
+      var startAngle = null;
+      var endAngle = null;
+      switch (playerFacingAngle) {
+        case "down":
+          startAngle = -Math.PI / 2 - swingArc / 2;
+          endAngle = -Math.PI / 2 + swingArc / 2;
+          break;
+        case "left":
+          startAngle = Math.PI - swingArc / 2;
+          endAngle = Math.PI + swingArc / 2;
+          break;
+        case "up":
+          startAngle = Math.PI / 2 - swingArc / 2;
+          endAngle = Math.PI / 2 + swingArc / 2;
+          break;
+        case "right":
+          startAngle = -swingArc / 2;
+          endAngle = swingArc / 2;
+          break;
+        default:
+          throw new Error("Invalid arc position");
+      }
       
       // Calculate the angular increment for each step
       const angleIncrement = (endAngle - startAngle) / numSteps;
@@ -113,44 +133,60 @@ export class CombatManager {
       return points;
     }
       
-    swingAnimation(playerPosition, playerFacingAngle, swingArc, swingRange) {
-      const square = new PIXI.Graphics();
-      square.beginFill(0xffffff);
-      square.drawRect(0, 0, 10, 10);
+    swingAnimation(playerPosition, playerFacing, swingArc, swingRange) {
+      const swingPoints = this.getSwingPoints(playerPosition.x, playerPosition.y, playerFacing, swingRange, swingArc, 10);
 
-      const swingPoints = this.getSwingPoints(playerPosition.x, playerPosition.y, swingRange, swingArc, 20);
-    
-      square.position.set(swingPoints[0].x, swingPoints[0].y);
-      this.app.stage.addChild(square);
-    
-      const duration = 100;
-      const startTimestamp = Date.now();
-      const animate = () => {
-        const elapsed = Date.now() - startTimestamp;
-        const t = Math.min(elapsed / duration, 1);
+      const duration = 250; // Duration for each square to fade (in milliseconds)
+      const squareSize = 10; // Size of each square
       
-        // Calculate the current index based on the swing points
-        const currentIndex = Math.floor(t * (swingPoints.length - 1));
+      let currentIndex = 0;
       
+      const createSquare = () => {
+        const square = new PIXI.Graphics();
+        square.beginFill(0xffffff);
+        square.drawRect(0, 0, squareSize, squareSize);
+        square.alpha = 1; // Initial alpha value (fully opaque)
         square.position.set(swingPoints[currentIndex].x, swingPoints[currentIndex].y);
+        this.app.stage.addChild(square);
       
-        if (t < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          this.app.stage.removeChild(square);
+        const startTimestamp = Date.now();
+        const animate = () => {
+          const elapsed = Date.now() - startTimestamp;
+          const t = Math.min(elapsed / duration, 1);
+      
+          // Update the alpha value based on the elapsed time
+          square.alpha = 1 - t;
+      
+          if (t < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            this.app.stage.removeChild(square);
+          }
+        };
+      
+        animate();
+      
+        currentIndex++;
+      
+        if (currentIndex < swingPoints.length) {
+          setTimeout(createSquare, 1);
         }
       };
       
-      animate();
+      createSquare();
+      setTimeout(() => {
+        this.swinging = false;
+      }, 1000);
     }
 
     playerSwing(player, enemies) {
-      const swingRange = 50; // Define the swing range
-      const swingArc = Math.PI / 4; // Define the swing arc (45 degrees in this example)
+      this.swinging = true;
+      const swingRange = 50; // Define the swing range as 50px
+      const swingArc = Math.PI/4; // Define the swing arc as 45 degrees
   
       const playerPosition = player.getPosition();
       const playerFacing = player.currentDirection; // Assuming 'currentDirection' indicates the player's facing direction
-      this.swingAnimation(playerPosition, this.getPlayerFacingAngle(playerFacing) * Math.PI / 180, swingArc, swingRange);
+      this.swingAnimation(playerPosition, playerFacing, swingArc, swingRange);
   
       // Loop through all enemies
       for (let i = 0; i < enemies.length; i++) {

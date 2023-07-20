@@ -34,7 +34,7 @@ function gameLoop(delta) {
     enemies.forEach(enemy => {
         enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y);
     })
-    if(player.currentDirection && input.isSpacebarPressed()) combatManager.playerSwing(player, enemies);
+    if(player.currentDirection && input.isSpacebarPressed() & !combatManager.swinging) combatManager.playerSwing(player, enemies);
 }
 
 app.ticker.add(gameLoop);

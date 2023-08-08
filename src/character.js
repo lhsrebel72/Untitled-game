@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { Weapon } from './weapon.js';
 
 export class Character {
     constructor(stage, playableAreaBounds, sprites, startingX, startingY) {
@@ -16,6 +17,7 @@ export class Character {
         });
 
         this.currentDirection = null;
+        this.weapon = new Weapon(100, 45);
 
         this.standTexture = {
             up: [],

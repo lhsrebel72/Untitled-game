@@ -38,15 +38,27 @@ export class CombatManager {
         };
       }
 
-      checkSwordSwingHit(swingPoints, playerPosition, enemyPosition) {
-        for (let i = 0; i < swingPoints.length - 1; i++) {
-          if(this.isPointBetweenPoints(playerPosition,swingPoints[i],enemyPosition)){
+      checkSwordSwingHit(swingPoints, boundingRect) {
+        for (const swingPoint of swingPoints) {
+          const x = swingPoint.x;
+          const y = swingPoint.y;
+      
+          // Check if the swing point falls within the bounding rectangle
+          if (
+            x >= boundingRect.x &&
+            x <= boundingRect.x + boundingRect.width &&
+            y >= boundingRect.y &&
+            y <= boundingRect.y + boundingRect.height
+          ) {
+            // The swing point is inside the bounding rectangle
             return true;
           }
         }
+      
+        // None of the swing points fall within the bounding rectangle
         return false;
       }
-
+      
       crossProduct(pointA, pointB, pointC) {
         const vectorAB = { x: pointB.x - pointA.x, y: pointB.y - pointA.y };
         const vectorAC = { x: pointC.x - pointA.x, y: pointC.y - pointA.y };
@@ -177,8 +189,7 @@ export class CombatManager {
   
       // Loop through all enemies
       for (let i = 0; i < enemies.length; i++) {
-        const enemyPosition = enemies[i].getPosition();
-        if (this.checkSwordSwingHit(swingPoints, playerPosition, enemyPosition)) {
+        if (this.checkSwordSwingHit(swingPoints, enemies[i].getRect())) {
           // The sword swing hits the enemy
           // Destroy the enemy
           enemies[i].characterSprite.destroy();

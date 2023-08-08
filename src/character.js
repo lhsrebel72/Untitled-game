@@ -47,7 +47,7 @@ export class Character {
             right: []
         };
 
-        this.speed = 10;
+        this.speed = 3;
     }
 
     update(newDirection, playableAreaBounds, app) {
@@ -150,6 +150,15 @@ export class Character {
         return{
             x: x,
             y: y
+        }
+    }
+
+    getRect(){
+        return{
+            x: this.characterSprite.x,
+            y: this.characterSprite.y,
+            width: this.characterSprite.width,
+            height: this.characterSprite.height
         }
     }
 }

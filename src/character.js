@@ -153,12 +153,7 @@ export class Character {
         }
     }
 
-    getRect(){
-        return{
-            x: this.characterSprite.x,
-            y: this.characterSprite.y,
-            width: this.characterSprite.width,
-            height: this.characterSprite.height
-        }
+    getSprite(){
+        return this.characterSprite;
     }
 }

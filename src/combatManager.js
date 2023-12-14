@@ -7,71 +7,6 @@ export class CombatManager {
       this.app = app;
       const swinging = false;
     }
-
-    getDirectionAndDistance(spriteA, spriteB) {
-        const boundsA = spriteA.getBounds();
-        const boundsB = spriteB.getBounds();
-      
-        const centerA = new PIXI.Point(
-          boundsA.x + boundsA.width / 2,
-          boundsA.y + boundsA.height / 2
-        );
-      
-        const centerB = new PIXI.Point(
-          boundsB.x + boundsB.width / 2,
-          boundsB.y + boundsB.height / 2
-        );
-      
-        const distance = Math.sqrt(
-          Math.pow(centerB.x - centerA.x, 2) +
-          Math.pow(centerB.y - centerA.y, 2)
-        );
-      
-        const angle = Math.atan2(centerB.y - centerA.y, centerB.x - centerA.x);
-      
-          console.log(distance);
-          console.log(angle);
-
-        return {
-          distance,
-          angle
-        };
-      }
-
-      checkSwordSwingHit(swingPoints, boundingRect) {
-        for (const swingPoint of swingPoints) {
-          const x = swingPoint.x;
-          const y = swingPoint.y;
-      
-          // Check if the swing point falls within the bounding rectangle
-          if (
-            x >= boundingRect.x &&
-            x <= boundingRect.x + boundingRect.width &&
-            y >= boundingRect.y &&
-            y <= boundingRect.y + boundingRect.height
-          ) {
-            // The swing point is inside the bounding rectangle
-            return true;
-          }
-        }
-      
-        // None of the swing points fall within the bounding rectangle
-        return false;
-      }
-      
-      crossProduct(pointA, pointB, pointC) {
-        const vectorAB = { x: pointB.x - pointA.x, y: pointB.y - pointA.y };
-        const vectorAC = { x: pointC.x - pointA.x, y: pointC.y - pointA.y };
-        return vectorAB.x * vectorAC.y - vectorAB.y * vectorAC.x;
-      }
-      
-      // Function to check if a point (P) lies between two points (A and B)
-      isPointBetweenPoints(pointA, pointB, pointP) {
-        const crossProductABP = this.crossProduct(pointA, pointB, pointP);
-        return Math.abs(crossProductABP) < Number.EPSILON && 
-               (pointP.x - pointA.x) * (pointP.x - pointB.x) <= 0 &&
-               (pointP.y - pointA.y) * (pointP.y - pointB.y) <= 0;
-      }
       
     getWeaponArcFromPlayerFacing(playerFacing, swingArc) {
       let startAngle, endAngle;
@@ -131,8 +66,22 @@ export class CombatManager {
       
       return points;
     }
+
+    checkCollision(sprite1, sprite2) {
+      // Get the bounds of each sprite
+      const bounds1 = sprite1.getBounds();
+      const bounds2 = sprite2.getBounds();
+    
+      // Check for collision using bounding boxes
+      return (
+        bounds1.x < bounds2.x + bounds2.width &&
+        bounds1.x + bounds1.width > bounds2.x &&
+        bounds1.y < bounds2.y + bounds2.height &&
+        bounds1.y + bounds1.height > bounds2.y
+      );
+    }
       
-    swingAnimation(swingPoints) {
+    swingAnimation(swingPoints, enemies) {
       const duration = 250; // Duration for each square to fade (in milliseconds)
       const squareSize = 10; // Size of each square
       
@@ -145,6 +94,16 @@ export class CombatManager {
         square.alpha = 1; // Initial alpha value (fully opaque)
         square.position.set(swingPoints[currentIndex].x, swingPoints[currentIndex].y);
         this.app.stage.addChild(square);
+
+        for (let i = 0; i < enemies.length; i++) {
+          if (this.checkCollision(enemies[i].getSprite(), square)) {
+            // The sword swing hits the enemy
+            // Destroy the enemy
+            enemies[i].characterSprite.destroy();
+            enemies.splice(i, 1);
+            i--;
+          }
+        }
       
         const startTimestamp = Date.now();
         const animate = () => {
@@ -185,17 +144,6 @@ export class CombatManager {
       const playerFacing = player.currentDirection; // Assuming 'currentDirection' indicates the player's facing direction
       const swingArcAngles = this.getWeaponArcFromPlayerFacing(playerFacing, swingArc);
       const swingPoints = this.getSwingPoints(playerPosition.x, playerPosition.y, swingArcAngles, swingRange);
-      this.swingAnimation(swingPoints);
-  
-      // Loop through all enemies
-      for (let i = 0; i < enemies.length; i++) {
-        if (this.checkSwordSwingHit(swingPoints, enemies[i].getRect())) {
-          // The sword swing hits the enemy
-          // Destroy the enemy
-          enemies[i].characterSprite.destroy();
-          enemies.splice(i, 1);
-          i--;
-        }
-      }
+      this.swingAnimation(swingPoints, enemies);
     }
 }

@@ -152,4 +152,8 @@ export class Character {
             y: y
         }
     }
+
+    getSprite(){
+        return this.characterSprite;
+    }
 }

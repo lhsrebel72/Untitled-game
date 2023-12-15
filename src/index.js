@@ -25,8 +25,14 @@ const background = new Background(app.stage, renderedArea, playableAreaBounds, s
 background.setUp();
 const input = new Input();
 const player = new Player(app.stage, playableAreaBounds, sprites);
-const enemies = [new Enemy(app.stage, playableAreaBounds, sprites)];
-const combatManager = new CombatManager(app);
+const enemies = [];
+spawnRandomEnemies();
+const combatManager = new CombatManager(app, player, enemies);
+document.addEventListener('death', (event) => {
+    const character = event.detail.character;
+    const isPlayerDeath = event.detail.isPlayerDeath;
+    handleDeath(character, isPlayerDeath);
+});
 
 // Set up the game loop
 function gameLoop(delta) {
@@ -34,7 +40,31 @@ function gameLoop(delta) {
     enemies.forEach(enemy => {
         enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y);
     })
-    if(player.currentDirection && input.isSpacebarPressed() & !combatManager.swinging) combatManager.playerSwing(player, enemies);
+    if(player.currentDirection && input.isSpacebarPressed()) player.attack();
 }
+
+function handleDeath(character, isPlayerDeath){
+    if(!isPlayerDeath){
+        const index = enemies.indexOf(character);
+
+        if (index !== -1) {
+            enemies.splice(index, 1);
+            //spawnRandomEnemies();
+        } 
+    }
+}
+
+function spawnRandomEnemies() {
+    const numEnemies = Math.floor(Math.random() * 10) + 1; // Random number between 1 and 10
+  
+    for (let i = 0; i < numEnemies; i++) {
+      // Calculate random x and y within the range of 100-1000 pixels from the player's position
+      const x = player.getPosition().x + Math.floor(Math.random() * 1001) - 500; // Random value between -450 and 450
+      const y = player.getPosition().y + Math.floor(Math.random() * 1001) - 500; // Random value between -450 and 450
+  
+      // Spawn a new enemy
+      enemies.push(new Enemy(app.stage, playableAreaBounds, sprites, x, y));
+    }
+  }
 
 app.ticker.add(gameLoop);

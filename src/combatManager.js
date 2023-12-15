@@ -3,15 +3,20 @@ import { TWEEN } from '@tweenjs/tween.js';
 
 export class CombatManager {
 
-    constructor(app) {
+    constructor(app, player, enemies) {
       this.app = app;
-      const swinging = false;
+      this.player = player;
+      this.enemies = enemies;
+      document.addEventListener('attack', (event) => {
+        const { isPlayerAttacking, attacker} = event.detail;
+        this.handleAttackEvent(isPlayerAttacking, attacker);
+      });
     }
       
-    getWeaponArcFromPlayerFacing(playerFacing, swingArc) {
+    getWeaponArcFromAttackerFacing(attackerFacing, swingArc) {
       let startAngle, endAngle;
 
-      switch (playerFacing) {
+      switch (attackerFacing) {
         case "down":
           startAngle = -Math.PI / 2 - swingArc / 2;
           endAngle = -Math.PI / 2 + swingArc / 2;
@@ -43,9 +48,9 @@ export class CombatManager {
       return difference;
     }
 
-    getSwingPoints(centerX, centerY, playerFacingAngles, swingRange) {
-      const startAngle = playerFacingAngles.startAngle;
-      const endAngle = playerFacingAngles.endAngle;
+    getSwingPoints(centerX, centerY, attackerFacingAngles, swingRange) {
+      const startAngle = attackerFacingAngles.startAngle;
+      const endAngle = attackerFacingAngles.endAngle;
 
       //how many squares will be animated for the swing
       const swingResolution = 10;
@@ -81,9 +86,9 @@ export class CombatManager {
       );
     }
       
-    swingAnimation(swingPoints, enemies) {
+    swingAnimation(attacker, swingPoints, targets, weapon) {
       const duration = 250; // Duration for each square to fade (in milliseconds)
-      const squareSize = 10; // Size of each square
+      const squareSize = weapon.width; // Size of each square
       
       let currentIndex = 0;
       
@@ -95,13 +100,11 @@ export class CombatManager {
         square.position.set(swingPoints[currentIndex].x, swingPoints[currentIndex].y);
         this.app.stage.addChild(square);
 
-        for (let i = 0; i < enemies.length; i++) {
-          if (this.checkCollision(enemies[i].getSprite(), square)) {
-            // The sword swing hits the enemy
-            // Destroy the enemy
-            enemies[i].characterSprite.destroy();
-            enemies.splice(i, 1);
-            i--;
+        for (let i = 0; i < targets.length; i++) {
+          if (targets[i].health > 0 && this.checkCollision(targets[i].getSprite(), square)) {
+            // The sword swing hits the target
+            // hurt the target
+            targets[i].health -= weapon.damage
           }
         }
       
@@ -131,19 +134,28 @@ export class CombatManager {
       
       createSquare();
       setTimeout(() => {
-        this.swinging = false;
+        attacker.swinging = false;
       }, 1000);
     }
 
-    playerSwing(player, enemies) {
-      this.swinging = true;
-      const swingRange = player.weapon.range; // Define the swing range as 50px
-      const swingArc = player.weapon.getArcAsRadians(); // Define the swing arc as 45 degrees
+    handleAttackEvent(isPlayerAttacking, attacker){
+      if(isPlayerAttacking){
+        this.attack(this.player, this.enemies);
+      }
+      else {
+        this.attack(attacker, [this.player])
+      }
+    }
+
+    attack(attacker, targets) {
+      attacker.swinging = true;
+      const swingRange = attacker.weapon.range;
+      const swingArc = attacker.weapon.getArcAsRadians();
   
-      const playerPosition = player.getPosition();
-      const playerFacing = player.currentDirection; // Assuming 'currentDirection' indicates the player's facing direction
-      const swingArcAngles = this.getWeaponArcFromPlayerFacing(playerFacing, swingArc);
-      const swingPoints = this.getSwingPoints(playerPosition.x, playerPosition.y, swingArcAngles, swingRange);
-      this.swingAnimation(swingPoints, enemies);
+      const attackerPosition = attacker.getPosition();
+      const attackerFacing = attacker.currentDirection;
+      const swingArcAngles = this.getWeaponArcFromAttackerFacing(attackerFacing, swingArc);
+      const swingPoints = this.getSwingPoints(attackerPosition.x, attackerPosition.y, swingArcAngles, swingRange);
+      this.swingAnimation(attacker, swingPoints, targets, attacker.weapon);
     }
 }

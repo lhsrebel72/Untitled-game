@@ -1,11 +1,12 @@
 import * as PIXI from 'pixi.js';
-import { Weapon } from './weapon.js';
 
 export class Character {
-    constructor(stage, playableAreaBounds, sprites, startingX, startingY) {
+    constructor(stage, playableAreaBounds, sprites, startingX, startingY, health) {
         this.sprites = sprites;
         this.characterTextureSet = []
         this.texturesLoaded = false;
+        this.swinging = false;
+        this.health = health
         this.characterSprite = this.sprites.createCharacterPlaceholderSprite(playableAreaBounds, startingX, startingY);
         stage.addChild(this.characterSprite);
         const characterSpritePromise = this.sprites.createCharacterSpriteSet();
@@ -17,7 +18,6 @@ export class Character {
         });
 
         this.currentDirection = null;
-        this.weapon = new Weapon(100, 45);
 
         this.standTexture = {
             up: [],
@@ -50,10 +50,16 @@ export class Character {
         this.speed = 3;
     }
 
-    update(newDirection, playableAreaBounds, app) {
+    update(newDirection, playableAreaBounds, app, isPlayer) {
         // Use the directions object to move the character
         if(this.characterSprite) {
             this.moveCharacter(newDirection,playableAreaBounds);
+        }
+        if(this.health <= 0){
+            this.characterSprite.destroy();
+            // Trigger the 'death' event
+            const deathEvent = new CustomEvent('death', { detail: { character: this , isPlayerDeath: isPlayer} });
+            document.dispatchEvent(deathEvent);
         }
     }
 

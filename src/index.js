@@ -5,6 +5,7 @@ import { Input } from './input.js';
 import { Sprites } from './sprites.js';
 import { Background } from './background.js';
 import { CombatManager } from './combatManager.js';
+import { SpatialPartitioning } from './spatialPartitioning.js';
 
 // Set up Pixi.js
 const app = new PIXI.Application({
@@ -18,14 +19,17 @@ document.getElementById('game-container').appendChild(app.view);
 const renderedArea = {width: 5000, height:5000};
 const boundBuffer = 500;
 const playableAreaBounds = {minX: 0 + boundBuffer, maxX: renderedArea.width - boundBuffer, minY:0 + boundBuffer, maxY:renderedArea.height - boundBuffer};
+const spatialPartitioning = new SpatialPartitioning(100);
 
 // Create the game objects
 const sprites = new Sprites(app.stage);
+sprites.createCharacterSpriteSet();
 const background = new Background(app.stage, renderedArea, playableAreaBounds, sprites);
 background.setUp();
 const input = new Input();
 const player = new Player(app.stage, playableAreaBounds, sprites);
 const enemies = [];
+var updateGrid = true; //wil likely need to update this to only be true after a certain amount of frams
 spawnRandomEnemies();
 const combatManager = new CombatManager(app, player, enemies);
 document.addEventListener('death', (event) => {
@@ -38,7 +42,7 @@ document.addEventListener('death', (event) => {
 function gameLoop(delta) {
     player.update(input.directions, playableAreaBounds, app);
     enemies.forEach(enemy => {
-        enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y);
+        enemy.update(playableAreaBounds, app, player.characterSprite.x, player.characterSprite.y, updateGrid);
     })
     if(player.currentDirection && input.isSpacebarPressed()) player.attack();
 }
@@ -49,7 +53,7 @@ function handleDeath(character, isPlayerDeath){
 
         if (index !== -1) {
             enemies.splice(index, 1);
-            //spawnRandomEnemies();
+            spawnRandomEnemies();
         } 
     }
 }
@@ -63,7 +67,7 @@ function spawnRandomEnemies() {
       const y = player.getPosition().y + Math.floor(Math.random() * 1001) - 500; // Random value between -450 and 450
   
       // Spawn a new enemy
-      enemies.push(new Enemy(app.stage, playableAreaBounds, sprites, x, y));
+      enemies.push(new Enemy(app.stage, spatialPartitioning, playableAreaBounds, sprites, x, y));
     }
   }
 

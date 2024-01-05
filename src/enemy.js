@@ -1,12 +1,17 @@
 import { Character } from './character.js';
 import { Weapon } from './weapon.js';
+import { SpatialPartitioning } from './spatialPartitioning.js';
 import * as PIXI from 'pixi.js';
 
 export class Enemy extends Character {
-    constructor(stage, playableAreaBounds, sprites, x, y) {
-      super(stage, playableAreaBounds, sprites, x, y,  Math.floor(Math.random() * 11));
+    constructor(stage, spatialPartitioning, playableAreaBounds, sprites, x, y) {
+      super(stage, playableAreaBounds, sprites, x, y,  Math.floor(Math.random() * 10) + 1);
 
       this.speed = 1;
+
+      this.spatialPartitioning = spatialPartitioning;
+      this.gridKey = null
+      this.spatialPartitioning.addToGrid(this.characterSprite);
 
       this.directionsToMove = {
         up: false,
@@ -16,11 +21,18 @@ export class Enemy extends Character {
         };
         this.weapon = new Weapon(35, 25, 5, 5);
         this.enemyClumsiness = Math.floor(Math.random() * 51); //how likely an enemy is to make a bad swing
+        this.separationDistance = 100;
     }
 
-    update(playableAreaBounds, app, playerX, playerY) {
-        this.followPlayer(playerX, playerY);
-        this.checkForAttack(playerX, playerY);
+    update(playableAreaBounds, app, playerX, playerY, updateGrid) {
+        if(this.health > 0) {
+            if(updateGrid) this.spatialPartitioning.updateEntityGrid(this.characterSprite);
+            this.move(playerX, playerY);
+            this.checkForAttack(playerX, playerY);
+        }
+        else {
+            this.spatialPartitioning.removeFromGrid(this.characterSprite);
+        }
         super.update(this.directionsToMove, playableAreaBounds, app, false);
     }
 
@@ -53,6 +65,41 @@ export class Enemy extends Character {
             if(this.currentDirection == "up" && yDifferential < 0) {
                 this.attack();
             }
+        }
+    }
+
+    separate(entitiesInSameCell) {
+        const separationVector = { x: 0, y: 0 };
+
+        for (const otherEntity of entitiesInSameCell) {
+            if (otherEntity !== this.characterSprite && otherEntity && this.characterSprite) {
+                const deltaX = (this.characterSprite?.x ?? 0) - (otherEntity?.x ?? 0);
+                const deltaY = (this.characterSprite?.y ?? 0) - (otherEntity?.y ?? 0);
+                const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+
+                if (distance < this.separationDistance) {
+                    separationVector.x += deltaX / distance;
+                    separationVector.y += deltaY / distance;
+                }
+            }
+        }
+
+        return separationVector;
+    }
+
+    move(playerX, playerY) {
+        const entitiesInSameCell = this.spatialPartitioning.getEntitiesInSameCell(this.characterSprite);
+        const separationVector = this.separate(entitiesInSameCell);
+
+        if (separationVector.x !== 0 || separationVector.y !== 0) {
+            // Separation is needed
+            this.directionsToMove.left = separationVector.x < 0;
+            this.directionsToMove.right = separationVector.x > 0;
+            this.directionsToMove.up = separationVector.y < 0;
+            this.directionsToMove.down = separationVector.y > 0;
+        } else {
+            // No separation needed, follow the player
+            return this.followPlayer(playerX, playerY);
         }
     }
 

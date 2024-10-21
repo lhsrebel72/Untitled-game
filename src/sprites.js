@@ -1,8 +1,11 @@
 import * as PIXI from 'pixi.js';
 
-export class Sprites {
+const EventEmitter = require('events');
+
+export class Sprites extends EventEmitter{
 
     constructor(stage) {
+        super();
         this.grassTextures = [];
         this.forestTextures = [];
         this.characterTextureSets = [];
@@ -19,14 +22,15 @@ export class Sprites {
     }
 
     // Create sprite set from a spritesheet
-    createSpriteTextureSetFromSheet(spriteSheet, spriteTextureSet, spriteHeight, spriteWidth) {
+    createSpriteTextureSetFromSheet(spriteHeight, spriteWidth) {
         // Loop through the sprite sheet and create a new sprite for each frame
         //y and x stand represent the starting (top left) coordinate of each sprite
+        const spriteSheet = this.characterSpriteSheets[0]
         for (let y = 0; y < spriteSheet.height; y += spriteHeight) {
-            spriteTextureSet[y/spriteHeight] = [];
+            this.characterTextureSets[y/spriteHeight] = [];
             for (let x = 0; x < spriteSheet.width; x += spriteWidth) {
                 const spriteTexture = new PIXI.Texture(spriteSheet.baseTexture, new PIXI.Rectangle(x, y, spriteWidth, spriteHeight));
-                spriteTextureSet[y/spriteHeight][x/spriteWidth] = spriteTexture;
+                this.characterTextureSets[y/spriteHeight][x/spriteWidth] = spriteTexture;
             }
         }
     }
@@ -75,24 +79,22 @@ export class Sprites {
 
     // Create the character sprite
     createCharacterSpriteSet() {
-        return new Promise((resolve) => {
-            this.loadTextureSet(this.characterSpriteSheets, "character-sprite", 1);
+        this.loadTextureSet(this.characterSpriteSheets, "character-sprite", 1);
     
-            const createCharacterSprites = () => {
-                this.createSpriteTextureSetFromSheet(this.characterSpriteSheets[0], this.characterTextureSets, 64, 64);
-                resolve(this.characterTextureSets);
-            };
-        
-            if (this.characterSpriteSheets[0].baseTexture.valid) {
-                // Texture has already been processed, create the TilingSprites
-                createCharacterSprite();
-            } else {
-                // Wait for the texture to finish processing and then create the TilingSprites
-                this.characterSpriteSheets[0].baseTexture.once("loaded", () => {
-                    createCharacterSprites();
-                });
-            }
-        });
+        const createCharacterSprites = () => {
+            this.createSpriteTextureSetFromSheet(64, 64);
+            this.emit('characterSpritesCreated');
+        };
+    
+        if (this.characterSpriteSheets[0].baseTexture.valid) {
+            // Texture has already been processed, create the TilingSprites
+            createCharacterSprites();
+        } else {
+            // Wait for the texture to finish processing and then create the TilingSprites
+            this.characterSpriteSheets[0].baseTexture.once("loaded", () => {
+                createCharacterSprites();
+            });
+        }
     }
 
     // Create placeholder sprite until character textures are loaded successfully

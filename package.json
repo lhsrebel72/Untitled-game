@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --open"
+    "start": "npm-run-all -p start:dev start:webpack",
+    "start:dev": "webpack-dev-server --open",
+    "start:webpack": "npx webpack"
   },
   "author": "",
   "license": "ISC",

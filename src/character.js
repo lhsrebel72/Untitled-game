@@ -1,23 +1,17 @@
 import * as PIXI from 'pixi.js';
-import { Weapon } from './weapon.js';
 
 export class Character {
-    constructor(stage, playableAreaBounds, sprites, startingX, startingY) {
+    constructor(stage, playableAreaBounds, sprites, startingX, startingY, health) {
         this.sprites = sprites;
         this.characterTextureSet = []
         this.texturesLoaded = false;
+        this.swinging = false;
+        this.health = health
+        this.playableAreaBounds = playableAreaBounds;
         this.characterSprite = this.sprites.createCharacterPlaceholderSprite(playableAreaBounds, startingX, startingY);
         stage.addChild(this.characterSprite);
-        const characterSpritePromise = this.sprites.createCharacterSpriteSet();
-        characterSpritePromise.then((characterTextureSet) => {
-            this.characterTextureSet = characterTextureSet;
-            this.characterSprite.texture = characterTextureSet[0][0];
-            this.initiateCharacterTextureSet(characterTextureSet, playableAreaBounds);
-            this.texturesLoaded = true;
-        });
 
         this.currentDirection = null;
-        this.weapon = new Weapon(100, 45);
 
         this.standTexture = {
             up: [],
@@ -47,12 +41,36 @@ export class Character {
             right: []
         };
 
+        if(sprites.characterTextureSets.length > 0){
+            this.handleCharacterSpritesCreated();
+        }
+        else {
+            this.sprites.createCharacterPlaceholderSprite(playableAreaBounds, startingX, startingY);
+            sprites.on('characterSpritesCreated', () => {
+                this.handleCharacterSpritesCreated();
+            });
+        }
+
         this.speed = 3;
     }
 
-    update(newDirection, playableAreaBounds, app) {
+    handleCharacterSpritesCreated(){
+        this.characterTextureSet = this.sprites.characterTextureSets;
+        this.characterSprite.texture = this.characterTextureSet[0][0];
+        this.initiateCharacterTextureSet(this.characterTextureSet, this.playableAreaBounds);
+        this.texturesLoaded = true;
+    }
+
+    update(newDirection, playableAreaBounds, app, isPlayer) {
         // Use the directions object to move the character
-        if(this.characterSprite) {
+        if(this.health <= 0){
+            this.characterSprite.destroy();
+            this.characterSprite = null;
+            // Trigger the 'death' event
+            const deathEvent = new CustomEvent('death', { detail: { character: this , isPlayerDeath: isPlayer} });
+            document.dispatchEvent(deathEvent);
+        }
+        else if(this.characterSprite) {
             this.moveCharacter(newDirection,playableAreaBounds);
         }
     }
